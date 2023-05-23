@@ -3,14 +3,19 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
 import requests
 from streamlit_lottie import st_lottie
 
+import streamlit.components.v1 as components
+
+
+
+
 # Mapping dictionaries
-gender_map = {'Male': 0, 'Female': 1}
+gender_map = {'Male': 1, 'Female': 0}
 education_map = {'School': 0, 'Bachelor': 1, 'Masters': 2, 'PHD': 3}
 yes_no_map = {'Yes': 1, 'No': 0}
 alcohol_map = {'Excessive': 2, 'Moderate': 1, 'Never': 0}
@@ -40,15 +45,42 @@ y = df['Depression Status']
 # Convert categorical variables to numerical using one-hot encoding
 ohe = OneHotEncoder(sparse=False)
 X_cat = X.select_dtypes(include=['object'])
-X_cat_ohe = ohe.fit_transform(X_cat)
 X_num = X.select_dtypes(exclude=['object'])
-X = np.concatenate([X_cat_ohe, X_num], axis=1)
+
+X_cat_ohe = ohe.fit_transform(X_cat)
+scaler = StandardScaler()
+X_num_scaled = scaler.fit_transform(X_num)
+
+X = np.concatenate([X_cat_ohe, X_num_scaled], axis=1)
 
 # Train logistic regression model
 model = LogisticRegression()
 model.fit(X, y)
 
-# Set the title and sidebar of the app
+# Set the title and header of the app
+st.title('DEPRESSION PREDICTION ')
+
+# Load and display the Lottie animation
+lottie_url = "https://assets4.lottiefiles.com/private_files/lf30_zzItmF.json"
+lottie_json = requests.get(lottie_url).json()
+st_lottie(lottie_json, speed=1, width=800, height=600)
+
+
+# Add a toggler bar for Overview and User Guide
+with st.expander("ℹ️ Overview"):
+    st.write('Welcome to the Depression Prediction Web App! This web app is designed to help assess and predict the likelihood of depression based on various input features. By providing information about your age, gender, education, BMI, and other factors, the web app will generate a prediction and provide insights into your mental health.')
+
+with st.expander("📚 User Guide"):
+    st.write('To use this web app, follow these steps:')
+    st.write('1. Fill in the required input fields in the sidebar, such as your age, gender, education, BMI, etc.')
+    st.write('2. Click the "Submit" button.')
+    st.write('3. The web app will generate a prediction regarding your depression status.')
+    st.write('4. The prediction will be displayed, indicating whether you are at risk of depression or not.')
+    st.write('5. Additionally, graphical reports visualizing your mental health journey will be shown, including a bar chart, scatter plot, and heatmap.')
+
+
+
+# Improve sidebar layout
 st.sidebar.title('Depression Prediction App')
 st.sidebar.markdown('Enter the values below to predict depression status.')
 
@@ -77,7 +109,7 @@ st.session_state.family_depression_index = st.session_state.family_depression_se
 st.session_state.alcohol_index = st.session_state.alcohol_consumption.index(Alcohol_Consumption_drinks_per_week)
 
 # Submit button
-submitted = st.button('Submit')
+submitted = st.button('Submit', key='submit_button')
 
 if submitted:
     # Create input feature vector
@@ -92,15 +124,19 @@ if submitted:
 
     # Define output
     st.write('### Prediction')
-    if prediction < 50:
-        st.warning('You are not at risk of depression.')
-        lottie_url = "https://assets2.lottiefiles.com/packages/lf20_gmspxrnd.json"
+    if prediction > 50:
+        st.warning('You are at risk of depression.')
+
+        st.write('Prediction Score:', prediction)
+        lottie_url = "https://assets10.lottiefiles.com/packages/lf20_ls1v2j0r.json"
         lottie_json = requests.get(lottie_url).json()
         st.markdown('&nbsp;' * 10, unsafe_allow_html=True)
         st_lottie(lottie_json, speed=1, width=800, height=600)
     else:
-        st.success('You are at risk of depression.')
-        lottie_url = "https://assets10.lottiefiles.com/packages/lf20_ls1v2j0r.json"
+        st.success('You are not at risk of depression.')
+
+        st.write('Prediction Score:', prediction)
+        lottie_url = "https://assets2.lottiefiles.com/packages/lf20_gmspxrnd.json"
         lottie_json = requests.get(lottie_url).json()
         st.markdown('&nbsp;' * 10, unsafe_allow_html=True)
         st_lottie(lottie_json, speed=1, width=800, height=600)
@@ -111,8 +147,8 @@ if submitted:
     # Bar chart
     st.write('#### Bar Chart')
     fig, ax = plt.subplots(figsize=(10, 5))
-    sns.countplot(data=df, x='Smoking Status', ax=ax)
-    ax.set_title('Smoking Status Distribution')
+    sns.countplot(data=df, x='Physical Activity (minutes)', ax=ax)
+    ax.set_title('Physical Activity (minutes)')
     st.pyplot(fig)
 
     # Scatter plot
