@@ -46,7 +46,7 @@ def main():
     if st.button("Submit"):
         st.success("Thank you for submitting the form!")
         st.markdown("<p style='text-align: center;'>Redirecting to the next page...</p>", unsafe_allow_html=True)
-        redirect_link = "https://dpc4.carrd.co"
+        redirect_link = "https://aniketxdaksh-webapp-main2-7tja2p.streamlit.app/"
         st.write(f'<meta http-equiv="refresh" content="3;URL={redirect_link}">', unsafe_allow_html=True)
 
 if __name__ == "__main__":
